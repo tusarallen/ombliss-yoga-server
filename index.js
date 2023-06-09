@@ -82,9 +82,43 @@ async function run() {
     };
 
     // users realated apis
-    app.get("/users", async (req, res) => {
+    app.get("/users", verifyJWT, verifyAdmin, async (req, res) => {
       const result = await usersCollection.find().toArray();
       console.log(result);
+      res.send(result);
+    });
+
+    // checking which user is admin
+    // security layer: verify jwt
+    // same email
+    // check admin
+    app.get("/users/admin/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      console.log(req.decoded.email, req.params.email);
+      const query = { email: email };
+
+      if (email !== req.decoded.email) {
+        res.send({ admin: false });
+      }
+
+      const user = await usersCollection.findOne(query);
+      console.log(user);
+      const result = { admin: user?.role === "admin" };
+      res.send(result);
+    });
+
+    app.get("/users/instructor/:email", verifyJWT, async (req, res) => {
+      const email = req.params.email;
+      console.log(req.decoded.email, req.params.email);
+      const query = { email: email };
+
+      if (email !== req.decoded.email) {
+        res.send({ admin: false });
+      }
+
+      const user = await usersCollection.findOne(query);
+      console.log(user);
+      const result = { admin: user?.role === "instructor" };
       res.send(result);
     });
 
@@ -115,6 +149,7 @@ async function run() {
       const result = await usersCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
+
     app.patch("/users/instructor/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
@@ -126,6 +161,7 @@ async function run() {
       const result = await usersCollection.updateOne(filter, updateDoc);
       res.send(result);
     });
+
     app.patch("/users/student/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
