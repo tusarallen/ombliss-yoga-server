@@ -48,6 +48,7 @@ async function run() {
     // await client.connect();
 
     const usersCollection = client.db("yogaDb").collection("users");
+    const instructorsCollection = client.db("yogaDb").collection("instructors");
 
     app.post("/jwt", (req, res) => {
       const user = req.body;
@@ -55,6 +56,20 @@ async function run() {
         expiresIn: "1h",
       });
       res.send({ token });
+    });
+
+    // instructors related apis
+    // (AddItem components data)-clinet going (instructorsCollection)-server
+    // TODO: verifyJWT, verifyAdmin
+    app.post("/instructors", verifyJWT, async (req, res) => {
+      const newItem = req.body;
+      const result = await instructorsCollection.insertOne(newItem);
+      res.send(result);
+    });
+
+    app.get("/instructors", verifyJWT, async (req, res) => {
+      const result = await instructorsCollection.find().toArray();
+      res.send(result);
     });
 
     // sending user by specific email
