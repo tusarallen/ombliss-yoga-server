@@ -49,6 +49,7 @@ async function run() {
 
     const usersCollection = client.db("yogaDb").collection("users");
     const instructorsCollection = client.db("yogaDb").collection("instructors");
+    const classesCollection = client.db("yogaDb").collection("classes");
 
     app.post("/jwt", (req, res) => {
       const user = req.body;
@@ -57,31 +58,6 @@ async function run() {
       });
       res.send({ token });
     });
-
-    // instructors related apis
-    // (AddItem components data)-clinet going (instructorsCollection)-server
-    // TODO: verifyJWT, verifyAdmin
-    app.post("/instructors", verifyJWT, async (req, res) => {
-      const newItem = req.body;
-      const result = await instructorsCollection.insertOne(newItem);
-      res.send(result);
-    });
-
-    app.get("/instructors", verifyJWT, async (req, res) => {
-      const result = await instructorsCollection.find().toArray();
-      res.send(result);
-    });
-
-    // sending user by specific email
-    // app.get("/users", async (req, res) => {
-    //   const email = req.query.email;
-    //   if (!email) {
-    //     res.send([]);
-    //   }
-    //   const query = { email: email };
-    //   const result = await usersCollection.find(query).toArray();
-    //   res.send(result);
-    // });
 
     // use verifyJWT before using verifyAdmin
     const verifyAdmin = async (req, res, next) => {
@@ -96,10 +72,132 @@ async function run() {
       next();
     };
 
+    // send feedback instructor
+    // feedback , denied , approved
+    app.patch(
+      "/feedback/admin/:id",
+      verifyJWT,
+      verifyAdmin,
+      async (req, res) => {
+        const doc = req.body;
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: {
+            feedback: doc.feedback,
+          },
+        };
+        const result = await instructorsCollection.updateOne(filter, updateDoc);
+        res.send(result);
+      }
+    );
+
+    // instructors related apis
+    // (AddItem components data)-clinet going (instructorsCollection)-server
+    // TODO: verifyJWT, verifyAdmin
+    app.post("/instructors", async (req, res) => {
+      const newItem = req.body;
+      const result = await instructorsCollection.insertOne(newItem);
+      res.send(result);
+    });
+
+    app.get("/instructors", async (req, res) => {
+      const result = await instructorsCollection.find().toArray();
+      res.send(result);
+    });
+
+    // update mytoys data
+    app.put("/instructors/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const info = req.body;
+      const updateClasses = {
+        $set: {
+          price: info.price,
+          seat: info.seat,
+          className: info.className,
+        },
+      };
+      const result = await instructorsCollection.updateOne(
+        filter,
+        updateClasses
+      );
+      res.send(result);
+    });
+
+    // send specific data for update
+    app.get("/instructors/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await instructorsCollection.findOne(query);
+      res.send(result);
+    });
+
+    // feedback , denied , approved
+    app.patch(
+      "/approvedinstructors/admin/:id",
+      verifyJWT,
+      verifyAdmin,
+      async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: {
+            status: "approved",
+          },
+        };
+        const result = await instructorsCollection.updateOne(filter, updateDoc);
+        res.send(result);
+      }
+    );
+
+    // feedback , denied , approved
+    app.patch(
+      "/deniedinstructors/admin/:id",
+      verifyJWT,
+      verifyAdmin,
+      async (req, res) => {
+        const id = req.params.id;
+        const filter = { _id: new ObjectId(id) };
+        const updateDoc = {
+          $set: {
+            status: "denied",
+          },
+        };
+        const result = await instructorsCollection.updateOne(filter, updateDoc);
+        res.send(result);
+      }
+    );
+
+    // when admin aproved class that class are gone in classes
+    app.post("/classes", async (req, res) => {
+      const doc = req.body;
+      const result = await classesCollection.insertOne(doc);
+      res.send(result);
+    });
+
+    // sending user by specific email
+    // app.get("/users", async (req, res) => {
+    //   const email = req.query.email;
+    //   if (!email) {
+    //     res.send([]);
+    //   }
+    //   const query = { email: email };
+    //   const result = await usersCollection.find(query).toArray();
+    //   res.send(result);
+    // });
+
     // users realated apis
     app.get("/users", verifyJWT, verifyAdmin, async (req, res) => {
       const result = await usersCollection.find().toArray();
       console.log(result);
+      res.send(result);
+    });
+
+    // send specific data to client for only instructor pages
+    app.get("/instructorusers", async (req, res) => {
+      const query = { role: "instructor" };
+      const result = await usersCollection.find(query).limit(6).toArray();
       res.send(result);
     });
 
