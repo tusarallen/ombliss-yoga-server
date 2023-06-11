@@ -176,6 +176,12 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/classes",  async (req, res) => {
+      const result = await classesCollection.find().toArray();
+      console.log(result);
+      res.send(result);
+    });
+
     // sending user by specific email
     // app.get("/users", async (req, res) => {
     //   const email = req.query.email;
