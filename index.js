@@ -50,6 +50,9 @@ async function run() {
     const usersCollection = client.db("yogaDb").collection("users");
     const instructorsCollection = client.db("yogaDb").collection("instructors");
     const classesCollection = client.db("yogaDb").collection("classes");
+    const studentsClassesCollection = client
+      .db("yogaDb")
+      .collection("studentclasses");
 
     app.post("/jwt", (req, res) => {
       const user = req.body;
@@ -106,7 +109,7 @@ async function run() {
       res.send(result);
     });
 
-    // update mytoys data
+    // update myclasses(instructor) data
     app.put("/instructors/:id", async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
@@ -125,7 +128,7 @@ async function run() {
       res.send(result);
     });
 
-    // send specific data for update
+    // send specific data for update myclasses(instructor)
     app.get("/instructors/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -176,7 +179,7 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/classes",  async (req, res) => {
+    app.get("/classes", async (req, res) => {
       const result = await classesCollection.find().toArray();
       console.log(result);
       res.send(result);
@@ -290,6 +293,25 @@ async function run() {
         },
       };
       const result = await usersCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
+    // students related apis
+    // when students are clicked select button datas are store in mongodb studentclasses
+    app.post("/studentclasses", async (req, res) => {
+      const doc = req.body;
+      const result = await studentsClassesCollection.insertOne(doc);
+      res.send(result);
+    });
+
+    // send some data in client side using query
+    app.get("/studentclasses" , async (req, res) => {
+      let query = {};
+      if (req.query?.email) {
+        query = { email: req.query.email };
+      }
+      console.log(req.query.email);
+      const result = await studentsClassesCollection.find(query).toArray();
       res.send(result);
     });
 
