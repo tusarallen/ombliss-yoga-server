@@ -305,13 +305,21 @@ async function run() {
     });
 
     // send some data in client side using query
-    app.get("/studentclasses" , async (req, res) => {
+    app.get("/studentclasses", async (req, res) => {
       let query = {};
       if (req.query?.email) {
         query = { email: req.query.email };
       }
       console.log(req.query.email);
       const result = await studentsClassesCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // delete students class with id
+    app.delete("/studentclasses/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await studentsClassesCollection.deleteOne(query);
       res.send(result);
     });
 
