@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const cors = require("cors");
 require("dotenv").config();
+const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
 const port = process.env.PORT || 5000;
 
 // middleware
@@ -53,6 +54,7 @@ async function run() {
     const studentsClassesCollection = client
       .db("yogaDb")
       .collection("studentclasses");
+    const paymentCollection = client.db("yogaDb").collection("payments");
 
     app.post("/jwt", (req, res) => {
       const user = req.body;
@@ -315,11 +317,54 @@ async function run() {
       res.send(result);
     });
 
+    // useLoaderData to send data payment components
+    app.get("/paystudentclasses/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await studentsClassesCollection.findOne(query);
+      res.send(result);
+    });
+
     // delete students class with id
     app.delete("/studentclasses/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await studentsClassesCollection.deleteOne(query);
+      res.send(result);
+    });
+
+    // payment related apis
+    // create payment intent
+    app.post("/create-payment-intent", verifyJWT, async (req, res) => {
+      const { price } = req.body;
+      const amount = parseInt(price * 100);
+      console.log(price, amount);
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+      res.send({
+        clientSecret: paymentIntent.client_secret,
+      });
+    });
+
+    // store payment data in mongo server
+    app.post("/payments", verifyJWT, async (req, res) => {
+      const payment = req.body;
+      const insertPayment = await paymentCollection.insertOne(payment);
+
+      const query = { _id: new ObjectId(payment.classId) };
+      const deletePayment = await studentsClassesCollection.deleteOne(query);
+
+      res.send({ insertPayment, deletePayment });
+    });
+
+    // show payment data in enrolled components
+    app.get("/enrolledclass/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await paymentCollection.findOne(query);
       res.send(result);
     });
 
