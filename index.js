@@ -205,8 +205,15 @@ async function run() {
       res.send(result);
     });
 
-    // send specific data to client for only instructor pages
+    // send all instructor data in instructor pages
     app.get("/instructorusers", async (req, res) => {
+      const query = { role: "instructor" };
+      const result = await usersCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    // send only 6 data in instructor pages
+    app.get("/popularinstructors", async (req, res) => {
       const query = { role: "instructor" };
       const result = await usersCollection.find(query).limit(6).toArray();
       res.send(result);
@@ -364,11 +371,11 @@ async function run() {
       const email = req.query.email;
       const query = { email: email };
       const payment = await paymentCollection.find(query).toArray();
-      const courseId = payment.map((paymentId) => paymentId.courseId);
-      const classesData = await classesCollection
-        .find({ _id: { $in: courseId } })
-        .toArray();
-      res.send(classesData);
+      // const courseId = payment.map((paymentId) => paymentId.courseId);
+      // const classesData = await classesCollection
+      //   .find({ _id: { $in: courseId } })
+      //   .toArray();
+      res.send(payment);
     });
 
     // show payment data in enrolled components
