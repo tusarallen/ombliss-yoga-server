@@ -354,10 +354,21 @@ async function run() {
       const payment = req.body;
       const insertPayment = await paymentCollection.insertOne(payment);
 
-      const query = { _id: new ObjectId(payment.classId) };
+      const query = { _id: new ObjectId(payment.paymentId) };
       const deletePayment = await studentsClassesCollection.deleteOne(query);
 
       res.send({ insertPayment, deletePayment });
+    });
+
+    app.get("/getpayments", async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      const payment = await paymentCollection.find(query).toArray();
+      const courseId = payment.map((paymentId) => paymentId.courseId);
+      const classesData = await classesCollection
+        .find({ _id: { $in: courseId } })
+        .toArray();
+      res.send(classesData);
     });
 
     // show payment data in enrolled components
