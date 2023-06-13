@@ -187,6 +187,21 @@ async function run() {
       res.send(result);
     });
 
+    // update availabe seat and enrolled in all classes data
+    app.put("/classes/approved/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const { seat, enrolled } = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          seat: seat,
+          enrolled: enrolled,
+        },
+      };
+      const result = await classesCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+
     // sending user by specific email
     // app.get("/users", async (req, res) => {
     //   const email = req.query.email;
