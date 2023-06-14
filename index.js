@@ -187,6 +187,12 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/classes/homepage", async (req, res) => {
+      const result = await classesCollection.find().limit(6).toArray();
+      console.log(result);
+      res.send(result);
+    });
+
     // update availabe seat and enrolled in all classes data
     app.put("/classes/approved/:id", async (req, res) => {
       const id = req.params.id;
