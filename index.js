@@ -188,7 +188,7 @@ async function run() {
     });
 
     // update availabe seat and enrolled in all classes data
-    app.put("/classes/approved/:id", verifyJWT, async (req, res) => {
+    app.put("/classes/approved/:id", async (req, res) => {
       const id = req.params.id;
       const { seat, enrolled } = req.body;
       const filter = { _id: new ObjectId(id) };
